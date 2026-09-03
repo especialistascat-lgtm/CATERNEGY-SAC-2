@@ -1,0 +1,6 @@
+{
+  "name": "CATENERGY SAC - Consultorías en Alta Tensión y Energía",
+  "description": "Portal corporativo oficial de CATENERGY SAC. Consultoría en gestión de la energía, mantenimiento especializado y subestaciones de alta, media y baja tensión.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
