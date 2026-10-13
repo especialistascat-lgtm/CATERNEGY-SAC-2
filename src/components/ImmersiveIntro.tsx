@@ -62,7 +62,8 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
       if (!soundEnabled || isPaused) {
         audioRef.current.pause();
       } else {
-        audioRef.current.volume = 0.65;
+        // Balanced ambient audio volume raised by 40% (0.45)
+        audioRef.current.volume = 0.45;
         audioRef.current.play().catch(() => {
           // Browser audio restriction handled silently
         });
@@ -71,7 +72,7 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
   }, [soundEnabled, isPaused]);
 
   // Play energetic chime using Web Audio API
-  const playEnergyChime = (freq = 440, duration = 0.4) => {
+  const playEnergyChime = (freq = 440, duration = 0.5) => {
     if (!soundEnabled) return;
     try {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -87,9 +88,10 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
 
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, ctx.currentTime + duration);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.3, ctx.currentTime + duration);
 
-      gain.gain.setValueAtTime(0.09, ctx.currentTime);
+      // Chime volume increased by 40%
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
 
       osc.connect(gain);
@@ -102,15 +104,16 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
     }
   };
 
-  // Speak brand name on Scene 6
+  // Speak brand name with distinctive futuristic/robotic voice on Scene 6
   const speakBrandName = () => {
     if (!soundEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance('CAT ENERGY');
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
+      utterance.rate = 0.88; // Slightly deliberate pace for robotic weight
+      utterance.pitch = 0.75; // Deeper, robotic resonance
       utterance.lang = 'es-ES';
+      utterance.volume = 0.9;
       window.speechSynthesis.speak(utterance);
     } catch {
       // ignore
@@ -306,49 +309,67 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
       {/* ================= MAIN CINEMATIC STAGE ================= */}
       <div className="relative flex-1 flex items-center justify-center overflow-hidden px-4 sm:px-6">
         <AnimatePresence mode="wait">
-          {/* ================= ESCENA 1: NATURALEZA ================= */}
+          {/* ================= ESCENA 1: NATURALEZA Y ENERGÍA VIVA (PORTADA 1) ================= */}
           {currentScene === 1 && (
             <motion.div
               key="scene-1"
-              initial={{ opacity: 0, scale: 1.05 }}
+              initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 1 }}
-              className="relative z-10 text-center max-w-3xl flex flex-col items-center"
+              exit={{ opacity: 0, scale: 1.04 }}
+              transition={{ duration: 0.9, ease: 'easeOut' }}
+              className="relative z-10 text-center max-w-4xl flex flex-col items-center px-4"
             >
               {/* Natural Sunrise Background Backing Plate */}
               <div 
-                className="absolute -inset-20 bg-cover bg-center -z-10 opacity-30 rounded-3xl blur-md"
+                className="absolute -inset-24 bg-cover bg-center -z-10 opacity-35 rounded-3xl blur-md"
                 style={{
                   backgroundImage: `url('https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1920&q=80')`,
                 }}
               />
 
+              {/* Central Official Logo Presentation Card */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.15 }}
+                className="mb-5 relative group"
+              >
+                <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-amber-500/20 via-yellow-400/40 to-amber-500/20 blur-xl opacity-75 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div 
+                  className="relative px-6 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-black/80 border border-amber-400/50 backdrop-blur-xl shadow-2xl transition-all duration-300"
+                  style={{
+                    boxShadow: '0 0 35px rgba(250, 184, 0, 0.3), inset 0 0 20px rgba(250, 184, 0, 0.15)'
+                  }}
+                >
+                  <img
+                    src="/logo-original-1.png"
+                    alt="CAT ENERGY - Auditoría, Consultoría y Servicios en Energía"
+                    className="h-14 sm:h-20 w-auto object-contain filter drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
+                    loading="eager"
+                  />
+                </div>
+              </motion.div>
+
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-xs font-bold tracking-wider uppercase mb-5 backdrop-blur-md shadow-lg shadow-emerald-950/50">
                 <Wind className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Armonía Natural & Biodiversidad</span>
+                <span>Armonía Natural, Biodiversidad & Alta Potencia</span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight drop-shadow-2xl leading-tight">
-                El origen natural de <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300">
-                  la energía que impulsa al país
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight drop-shadow-2xl leading-tight">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-amber-300 to-[#FAB800] drop-shadow-[0_4px_24px_rgba(250,184,0,0.4)]">
+                  La energía que impulsa al país
                 </span>
               </h1>
 
-              <p className="mt-5 text-sm sm:text-lg text-slate-200 drop-shadow max-w-2xl mx-auto leading-relaxed">
-                En <strong>CATENERGY</strong>, la naturaleza es el origen. Inspirados en los ecosistemas del Perú y el majestuoso vuelo del guacamayo, concebimos la ingeniería eléctrica como una fuerza viva que respeta el medio ambiente y transforma recursos en desarrollo sostenible.
-              </p>
-
-              {/* Badges */}
-              <div className="mt-6 flex flex-wrap justify-center gap-2.5">
-                <span className="text-xs px-3.5 py-1.5 rounded-lg bg-black/60 border border-emerald-500/40 text-emerald-300 font-semibold backdrop-blur-sm">
+              {/* Minimalist Key Pillars Badges */}
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <span className="text-xs px-4 py-2 rounded-xl bg-black/70 border border-emerald-500/40 text-emerald-300 font-semibold backdrop-blur-md shadow-lg">
                   ☀️ Sol Radiante & Clima Andino
                 </span>
-                <span className="text-xs px-3.5 py-1.5 rounded-lg bg-black/60 border border-emerald-500/40 text-emerald-300 font-semibold backdrop-blur-sm">
-                  🦜 Vuelo del Guacamayo Amazónico
+                <span className="text-xs px-4 py-2 rounded-xl bg-black/70 border border-slate-700 text-slate-200 font-semibold backdrop-blur-md shadow-lg">
+                  ⚡ Consultorías en Alta Tensión (500 kV)
                 </span>
-                <span className="text-xs px-3.5 py-1.5 rounded-lg bg-black/60 border border-amber-500/40 text-amber-300 font-semibold backdrop-blur-sm">
+                <span className="text-xs px-4 py-2 rounded-xl bg-black/70 border border-emerald-500/40 text-emerald-300 font-semibold backdrop-blur-md shadow-lg">
                   🌱 Sostenibilidad & Huella Cero
                 </span>
               </div>
@@ -544,50 +565,45 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
             </motion.div>
           )}
 
-          {/* ================= ESCENA 6: SINGULARIDAD & REVELACIÓN DE MARCA ================= */}
+          {/* ================= ESCENA 6: REVELACIÓN DE MARCA LIMPIA & DESPEJADA ================= */}
           {currentScene === 6 && (
             <motion.div
               key="scene-6"
-              initial={{ opacity: 0, scale: 0.85 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.9, ease: 'easeOut' }}
               className="relative z-10 text-center max-w-4xl flex flex-col items-center px-4"
             >
-              {/* Concentric Shockwave Flare Rings */}
-              <div className="absolute w-[500px] h-[500px] rounded-full border-2 border-amber-400/20 animate-ping pointer-events-none -z-10" />
-              <div className="absolute w-[350px] h-[350px] rounded-full bg-amber-400/15 blur-3xl pointer-events-none -z-10" />
+              {/* Concentric Ambient Shockwave Flare Rings */}
+              <div className="absolute w-[500px] h-[500px] rounded-full border border-amber-400/15 animate-ping pointer-events-none -z-10" />
+              <div className="absolute w-[360px] h-[360px] rounded-full bg-amber-400/10 blur-3xl pointer-events-none -z-10" />
 
-              <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-amber-950/80 border border-amber-400/50 text-amber-300 text-xs font-extrabold tracking-widest uppercase mb-4 backdrop-blur-md shadow-lg shadow-amber-500/20">
-                <Flame className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
-                <span>Singularidad & Identidad Oficial</span>
-              </div>
-
-              {/* Official Brand Logo presentation with 3D energy illuminated frame */}
-              <div className="relative group mb-5">
-                {/* Background Ambient Glow that expands on hover */}
-                <div className="absolute -inset-3 rounded-[32px] bg-gradient-to-r from-amber-500/20 via-yellow-400/40 to-amber-500/20 blur-2xl opacity-40 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+              {/* Official Brand Logo presentation with clean 3D frame */}
+              <div className="relative group mb-6">
+                {/* Background Ambient Soft Glow */}
+                <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-r from-amber-500/15 via-yellow-400/25 to-amber-500/15 blur-2xl opacity-60 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
 
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
+                  initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  whileHover={{ scale: 1.025 }}
+                  whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.8, ease: 'easeOut' }}
-                  className="p-6 sm:p-8 rounded-3xl bg-black/85 border-2 border-amber-400/60 group-hover:border-amber-200 backdrop-blur-xl transition-all duration-300 relative cursor-pointer overflow-hidden shadow-2xl"
+                  className="p-6 sm:p-8 rounded-3xl bg-black/85 border border-amber-400/40 group-hover:border-amber-400/70 backdrop-blur-xl transition-all duration-300 relative cursor-pointer overflow-hidden shadow-2xl"
                   style={{
-                    boxShadow: '0 0 45px rgba(250, 184, 0, 0.35), inset 0 0 25px rgba(250, 184, 0, 0.2)',
+                    boxShadow: '0 0 35px rgba(250, 184, 0, 0.25), inset 0 0 20px rgba(250, 184, 0, 0.15)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.boxShadow =
-                      '0 0 65px rgba(250, 184, 0, 0.9), 0 0 110px rgba(250, 184, 0, 0.45), inset 0 0 35px rgba(250, 184, 0, 0.45)';
+                      '0 0 50px rgba(250, 184, 0, 0.5), inset 0 0 25px rgba(250, 184, 0, 0.25)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.boxShadow =
-                      '0 0 45px rgba(250, 184, 0, 0.35), inset 0 0 25px rgba(250, 184, 0, 0.2)';
+                      '0 0 35px rgba(250, 184, 0, 0.25), inset 0 0 20px rgba(250, 184, 0, 0.15)';
                   }}
                 >
-                  {/* Glowing electric light sweep on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+                  {/* Glowing subtle light sweep on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
 
                   <CatEnergyLogo
                     variant="yellow"
@@ -597,35 +613,15 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
                 </motion.div>
               </div>
 
-              <h3 className="text-xl sm:text-2xl font-bold text-amber-300 tracking-wide max-w-xl text-center">
-                Consultorías en Alta Tensión y Energía S.A.C.
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1 uppercase tracking-widest font-mono">
-                RUC: 20609382105 • ESTADO: ACTIVO / HABIDO • ICA – PERÚ
-              </p>
-
-              {/* 3 Core Pillars from Corporate Brochure */}
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5 max-w-2xl w-full">
-                <div className="px-3 py-2 rounded-xl bg-black/60 border border-amber-500/30 text-xs text-amber-200 font-semibold backdrop-blur-sm">
-                  1. Gestión de la Energía & Auditorías
-                </div>
-                <div className="px-3 py-2 rounded-xl bg-black/60 border border-amber-500/30 text-xs text-amber-200 font-semibold backdrop-blur-sm">
-                  2. Gestión de Mantenimiento & RCM
-                </div>
-                <div className="px-3 py-2 rounded-xl bg-black/60 border border-amber-500/30 text-xs text-amber-200 font-semibold backdrop-blur-sm">
-                  3. Subestaciones AT / MT / BT (500 kV)
-                </div>
-              </div>
-
               {/* Primary Action Button: INGRESAR A CATENERGY */}
-              <div className="mt-7 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+              <div className="mt-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <button
                   id="btn-ingresar-catenergy"
                   onClick={onComplete}
                   type="button"
-                  className="relative group overflow-hidden px-8 py-4 rounded-xl font-black text-sm sm:text-base uppercase tracking-wider bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-black shadow-2xl shadow-amber-500/50 hover:shadow-amber-500/80 transition-all duration-300 hover:scale-[1.04] active:scale-[0.98] border-2 border-amber-300 cursor-pointer"
+                  className="relative group overflow-hidden px-8 py-4 rounded-xl font-black text-sm sm:text-base uppercase tracking-wider bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-black shadow-2xl shadow-amber-500/40 hover:shadow-amber-500/70 transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] border-2 border-amber-300 cursor-pointer"
                   style={{
-                    boxShadow: '0 0 35px rgba(250, 184, 0, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.6)',
+                    boxShadow: '0 0 30px rgba(250, 184, 0, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.5)',
                   }}
                 >
                   <span className="relative z-10 flex items-center gap-3">
@@ -633,14 +629,14 @@ export const ImmersiveIntro: React.FC<ImmersiveIntroProps> = ({ onComplete }) =>
                     <ArrowRight className="w-5 h-5 text-black group-hover:translate-x-1.5 transition-transform" />
                   </span>
                   {/* Lightning sweep shimmer */}
-                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
+                  <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
                 </button>
 
                 <button
                   id="btn-explorar-directo"
                   onClick={onComplete}
                   type="button"
-                  className="px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-slate-200 hover:text-white text-xs uppercase font-bold tracking-wider transition-colors cursor-pointer"
+                  className="px-5 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 hover:text-white text-xs uppercase font-bold tracking-wider transition-colors cursor-pointer backdrop-blur-sm"
                 >
                   Ver Servicios Directamente
                 </button>

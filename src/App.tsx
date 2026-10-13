@@ -123,14 +123,14 @@ export default function App() {
           href={`https://wa.me/${COMPANY_INFO.whatsappNumber}?text=${encodeURIComponent('Hola CATENERGY SAC, requiero asistencia técnica para mis instalaciones eléctricas.')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="group relative flex items-center gap-2.5 px-4 py-3 rounded-full bg-[#15803D] hover:bg-[#16A34A] text-white font-bold text-xs uppercase tracking-wider shadow-2xl shadow-emerald-900/50 hover:scale-105 transition-all duration-300 border border-emerald-400/40"
+          className="group relative flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-[#15803D] hover:bg-[#16A34A] text-white font-bold shadow-2xl shadow-emerald-900/50 hover:scale-105 transition-all duration-300 border border-emerald-400/40"
         >
-          <span className="relative flex h-3 w-3">
+          <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
           </span>
-          <MessageCircle className="w-5 h-5 text-white" />
-          <span className="hidden sm:inline">WhatsApp 994 782 124</span>
+          <MessageCircle className="w-4 h-4 text-white shrink-0" />
+          <span className="tabular-nums font-bold tracking-normal text-xs sm:text-sm">994 782 124</span>
         </a>
       </aside>
     </div>

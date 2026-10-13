@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { HazardStripe } from './HazardStripe';
 import { COMPANY_INFO, AREAS_DATA } from '../data/catenergyData';
@@ -10,7 +10,9 @@ import {
   CheckCircle2, 
   Sparkles,
   PhoneCall,
-  FileText
+  FileText,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 interface SecondHeroValuePropProps {
@@ -22,19 +24,155 @@ export const SecondHeroValueProp: React.FC<SecondHeroValuePropProps> = ({
   onSelectArea,
   onOpenQuote,
 }) => {
-  return (
-    <section id="inicio" className="relative min-h-[92vh] flex flex-col justify-between pt-24 pb-12 overflow-hidden bg-[#0A0C11]">
-      {/* Panoramic Sunset & Nature Backdrop combined with electrical infrastructure */}
-      <div
-        className="absolute inset-0 bg-cover bg-center z-0 opacity-35 filter saturate-125"
-        style={{
-          backgroundImage: `linear-gradient(to bottom, rgba(10,12,17,0.7) 0%, rgba(10,12,17,0.85) 60%, #0A0C11 100%), url('https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=2000&q=80')`,
-        }}
-      />
+  const [ambientAudioEnabled, setAmbientAudioEnabled] = useState(true);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const audioElemRef = useRef<HTMLAudioElement | null>(null);
 
-      {/* Atmospheric ambient glows */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none" />
+  // Soft atmospheric discharge audio synthesizer via Web Audio API + audio track
+  // Creates a realistic, subtle low-frequency atmospheric rumble and electrostatic crackle from deep background
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    const playSoftAtmosphericDischarge = () => {
+      if (!ambientAudioEnabled) return;
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioCtx();
+        }
+        const ctx = audioContextRef.current;
+        if (ctx.state === 'suspended') {
+          ctx.resume();
+        }
+
+        const now = ctx.currentTime;
+        const duration = 4.5; // Soft lingering atmospheric resonance
+
+        // Sub-bass atmospheric hum (deep rumble in the background)
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        const subFilter = ctx.createBiquadFilter();
+
+        subOsc.type = 'sine';
+        subOsc.frequency.setValueAtTime(45, now);
+        subOsc.frequency.exponentialRampToValueAtTime(32, now + duration);
+
+        subFilter.type = 'lowpass';
+        subFilter.frequency.setValueAtTime(140, now);
+
+        // Very gentle volume scaling from far distance (deep in background)
+        subGain.gain.setValueAtTime(0.0001, now);
+        subGain.gain.exponentialRampToValueAtTime(0.025, now + 1.2);
+        subGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        subOsc.connect(subFilter);
+        subFilter.connect(subGain);
+        subGain.connect(ctx.destination);
+
+        subOsc.start(now);
+        subOsc.stop(now + duration);
+
+        // Electrostatic air ionized crackle (soft discharge texture)
+        const bufferSize = ctx.sampleRate * 2.5;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.9));
+        }
+
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const bandpass = ctx.createBiquadFilter();
+        bandpass.type = 'bandpass';
+        bandpass.frequency.setValueAtTime(650, now);
+        bandpass.Q.setValueAtTime(3.5, now);
+
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.0001, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.012, now + 0.8);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+
+        noise.connect(bandpass);
+        bandpass.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+
+        noise.start(now + 0.3);
+      } catch {
+        // Handled silently
+      }
+    };
+
+    // Trigger initial discharge after brief natural delay
+    const initialTimer = setTimeout(() => {
+      playSoftAtmosphericDischarge();
+    }, 1200);
+
+    // Subtle atmospheric discharges roll periodically in the background (every 14s)
+    intervalId = setInterval(() => {
+      playSoftAtmosphericDischarge();
+    }, 14000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(intervalId);
+    };
+  }, [ambientAudioEnabled]);
+
+  // Synchronize ambient audio element volume
+  useEffect(() => {
+    if (audioElemRef.current) {
+      if (ambientAudioEnabled) {
+        audioElemRef.current.volume = 0.16; // Gentle, distant atmospheric foundation
+        audioElemRef.current.play().catch(() => {});
+      } else {
+        audioElemRef.current.pause();
+      }
+    }
+  }, [ambientAudioEnabled]);
+
+  return (
+    <section id="inicio" className="relative min-h-[95vh] flex flex-col justify-between pt-24 pb-12 overflow-hidden bg-[#07090E]">
+      {/* ================= BACKGROUND HIGH-ENERGY VIDEO & ATMOSPHERIC LAYERS ================= */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {/* Dynamic Energy Particle & Vortex Video Background */}
+        <video
+          ref={videoRef}
+          src="/video/energy_portal_bg.mp4"
+          poster="/video/energy_portal_poster.jpg"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover opacity-35 mix-blend-screen scale-105 filter brightness-110 contrast-125"
+        />
+
+        {/* Ambient Photographic Texture (Sunset, Andean sky and high-voltage grid) */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-25 mix-blend-overlay filter saturate-125"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=2000&q=80')`,
+          }}
+        />
+
+        {/* Deep Optical Gradients for Pristine Contrast and Visual Elegance */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#07090E] via-[#07090E]/65 to-[#07090E]/85 pointer-events-none" />
+        <div className="absolute inset-0 bg-radial from-transparent via-[#07090E]/30 to-[#07090E]/90 pointer-events-none" />
+
+        {/* Golden and Cyan Electromagnetic Glows in 3D Space */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[420px] bg-amber-500/12 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-16 right-12 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[130px] pointer-events-none" />
+        <div className="absolute top-1/2 left-10 w-96 h-96 bg-emerald-500/8 rounded-full blur-[110px] pointer-events-none" />
+      </div>
+
+      {/* Atmospheric Discharge Audio Element */}
+      <audio
+        ref={audioElemRef}
+        src="/video/atmospheric_discharge_ambient.mp3"
+        loop
+        preload="auto"
+      />
 
       {/* Top Hazard Stripe Bar */}
       <div className="relative z-10 w-full mb-8">
@@ -42,17 +180,38 @@ export const SecondHeroValueProp: React.FC<SecondHeroValuePropProps> = ({
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full my-auto text-center">
-        {/* Environmental & Corporate Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/60 border border-amber-400/40 backdrop-blur-md text-amber-300 text-xs font-semibold uppercase tracking-widest mb-6 shadow-lg shadow-amber-500/10"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Consultorías en Alta Tensión y Energía S.A.C.</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-        </motion.div>
+        {/* Subtle Ambient Sound & Status Controls Bar */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <motion.div
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-black/75 border border-amber-400/40 backdrop-blur-md text-amber-300 text-xs font-semibold uppercase tracking-widest shadow-lg shadow-amber-500/10"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Consultorías en Alta Tensión y Energía S.A.C.</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          </motion.div>
+
+          {/* Sound Mute / Unmute Button for Atmospheric Discharge */}
+          <button
+            onClick={() => setAmbientAudioEnabled(!ambientAudioEnabled)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 hover:bg-black/95 border border-white/15 text-slate-300 hover:text-amber-400 text-xs transition-colors backdrop-blur-md cursor-pointer"
+            title={ambientAudioEnabled ? 'Silenciar descarga atmosférica de fondo' : 'Activar sonido atmosférico'}
+          >
+            {ambientAudioEnabled ? (
+              <>
+                <Volume2 className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                <span className="hidden sm:inline text-[10px] font-mono uppercase tracking-wider text-amber-300">Descarga Suave</span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="w-3.5 h-3.5 text-slate-400" />
+                <span className="hidden sm:inline text-[10px] font-mono uppercase tracking-wider text-slate-400">Silenciado</span>
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Powerful Value Proposition Headline in Thick, Radiant Gold Typography */}
         <motion.div
@@ -71,8 +230,8 @@ export const SecondHeroValueProp: React.FC<SecondHeroValuePropProps> = ({
             Gestión inteligente de la energía, confiabilidad eléctrica y mantenimiento especializado.
           </h1>
 
-          <p className="mt-6 text-base sm:text-xl text-slate-200 font-normal max-w-3xl mx-auto leading-relaxed drop-shadow">
-            Socio estratégico en el sector eléctrico para subestaciones e industrias en todo el Perú. Auditamos, prevenimos y garantizamos la continuidad de sus activos de alta, media y baja tensión con metodología de ciclo continuo PHVA.
+          <p className="mt-5 text-sm sm:text-lg text-slate-300/90 font-normal max-w-3xl mx-auto leading-relaxed drop-shadow">
+            Socio estratégico en el sector eléctrico para subestaciones e industrias en todo el Perú. Confiabilidad y continuidad de activos en alta, media y baja tensión bajo ciclo PHVA.
           </p>
         </motion.div>
 
@@ -81,23 +240,23 @@ export const SecondHeroValueProp: React.FC<SecondHeroValuePropProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.25 }}
-          className="mt-6 flex flex-wrap justify-center items-center gap-4 text-xs font-medium text-slate-300"
+          className="mt-6 flex flex-wrap justify-center items-center gap-3.5 text-xs font-medium text-slate-300/90"
         >
-          <div className="flex items-center gap-1.5 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded-lg border border-amber-500/20 backdrop-blur-sm">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Homologación OSINERGMIN (Clase A)</span>
+            <span className="text-slate-300">Homologación OSINERGMIN (Clase A)</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded-lg border border-amber-500/20 backdrop-blur-sm">
             <CheckCircle2 className="w-4 h-4 text-amber-400" />
-            <span>Sistemas de Gestión ISO 50001</span>
+            <span className="text-slate-300">Sistemas de Gestión ISO 50001</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded-lg border border-amber-500/20 backdrop-blur-sm">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Compromiso CERO ACCIDENTES (IPERC)</span>
+            <span className="text-slate-300">Compromiso CERO ACCIDENTES (IPERC)</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-black/50 px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">
+          <div className="flex items-center gap-1.5 bg-black/60 px-3 py-1.5 rounded-lg border border-amber-500/20 backdrop-blur-sm">
             <CheckCircle2 className="w-4 h-4 text-amber-400" />
-            <span>Subestaciones AT/MT hasta 500 kV</span>
+            <span className="text-slate-300">Subestaciones AT/MT hasta 500 kV</span>
           </div>
         </motion.div>
 
